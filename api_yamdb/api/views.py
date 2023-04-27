@@ -94,8 +94,9 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         permission_classes=[permissions.IsAuthenticated],
         serializer_class=UserEditSerializer,
+        url_path='me'
     )
-    def me(self, request):
+    def get_me(self, request):
         serializer = self.get_serializer(
             request.user,
             data=request.data,
