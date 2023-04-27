@@ -1,10 +1,11 @@
 import datetime as dt
+
+from django.conf import settings
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from django.conf import settings
-from reviews.validators import UsernameValidatorMixin
 
 from reviews.models import Category, Genre, Title, User
+from reviews.validators import UsernameValidatorMixin
 
 
 class CategorySerializer(serializers.ModelSerializer):
