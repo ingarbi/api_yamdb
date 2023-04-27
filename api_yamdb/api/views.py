@@ -14,7 +14,7 @@ from .filiters import TitleFilter
 from .permissions import IsAdmin
 from .serializers import (CategorySerializer, GenreSerializer,
                           RegisterDataSerializer, TitleSerializer,
-                          TokenSerializer, UserEditSerializer, UserSerializer)
+                          TokenSerializer, UserEditSerializer, UserSerializer, TitlePostSerializer)
 from .utils import confirmation_mail
 
 
@@ -34,6 +34,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+
+
 class GenreViewSet(viewsets.ModelViewSet):
     """
     Вьюсет для обработки всех жанров.
