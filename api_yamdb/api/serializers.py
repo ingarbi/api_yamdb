@@ -1,3 +1,4 @@
+import datetime as dt
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.conf import settings
@@ -9,19 +10,57 @@ from reviews.models import Category, Genre, Title, User
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = "__all__"
+        fields = ('name', 'slug')
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = "__all__"
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
+    rating = serializers.IntegerField(default=1)
+
     class Meta:
         model = Title
-        fields = "__all__"
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category',
+                  )
+        read_only_fields = ('id', 'name', 'year', 'rating',
+                            'description', 'genre', 'category',
+                            )
+
+
+class TitlePostSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    rating = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'genre', 'category')
+
+    def validate(self, value):
+        current_year = dt.date.today().year
+        if value > current_year:
+            raise serializers.ValidationError(
+                'Год произведения не может быть больше текущего.'
+            )
+        return value
+
+    def to_representation(self, instance):
+        return TitleSerializer(instance).data
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidatorMixin):

@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Title, User
+
+from .filiters import TitleFilter
 from .permissions import IsAdmin
 from .serializers import (CategorySerializer, GenreSerializer,
                           RegisterDataSerializer, TitleSerializer,
@@ -32,8 +34,6 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-
-
 class GenreViewSet(viewsets.ModelViewSet):
     """
     Вьюсет для обработки всех жанров.
@@ -41,6 +41,15 @@ class GenreViewSet(viewsets.ModelViewSet):
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdmin,)
+    filterset_class = TitleFilter
+    filterset_fields = ('name',)
+    ordering = ('name',)
+
+    def get_serializer_class(self):
+        if self.request.method in ['POST', 'PUT', 'PATCH']:
+            return TitlePostSerializer
+        return TitleSerializer
 
 
 @api_view(["POST"])

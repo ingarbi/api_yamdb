@@ -1,7 +1,9 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
+from .utilites import current_year
 from .validators import UsernameValidatorMixin
 
 
@@ -20,10 +22,34 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    name = models.CharField(
+        'Название произведения', max_length=settings.LIMIT_CHAT)
+    year = models.PositiveSmallIntegerField(
+        'Год выпуска',
+        db_index=True,
+        validators=[MinValueValidator(
+            limit_value=settings.MIN_LIMIT_VALUE,
+            message="Год не может быть меньше или равен нулю"),
+            MaxValueValidator(
+                limit_value=current_year,
+                message="Год не может быть больше текущего")])
+    description = models.TextField('Описание', blank=True)
+    genre = models.ManyToManyField(
+        Genre)
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    def __str__(self):
+        return self.name
+
     class Meta:
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
         default_related_name = "titles"
+        ordering = ('name',)
 
 
 class User(AbstractUser, UsernameValidatorMixin):
