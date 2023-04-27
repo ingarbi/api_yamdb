@@ -1,17 +1,26 @@
-import re
-
-from django.core.exceptions import ValidationError
-from django.contrib.auth.validators import UnicodeUsernameValidator
-
-class UsernameRegexValidator(UnicodeUsernameValidator):
-    regex = r"^[\w.@+-]+\Z"
-    flags = 0
+from django.conf import settings
+from django.core.validators import RegexValidator
+from django.db import models
+from rest_framework import serializers
 
 
-def validate_username(value):
-    if value.lower() == "me":
-        raise ValidationError(
-            ("Имя пользователя не может быть <me>."),
-            params={"value": value},
-        )
-    return value
+class UsernameValidatorMixin:
+    username = models.CharField(
+        max_length=settings.DEFAULT_FIELD_LENGTH,
+        verbose_name="Имя пользователя",
+        unique=True,
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r"^[\w.@+-]+$",
+                message="Имя пользователя содержит недопустимый символ",
+            )
+        ],
+    )
+
+    def validate_username(self, value):
+        if value.lower() == "me":
+            raise serializers.ValidationError(
+                "Имя пользователя 'me'- не доступно"
+            )
+        return value
