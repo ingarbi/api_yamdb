@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser
-from django.utils.translation import gettext_lazy as _
 from django.db import models
+from .validators import validate_username, UsernameRegexValidator
 
 
 class Category(models.Model):
@@ -25,41 +25,40 @@ class Title(models.Model):
 
 
 class User(AbstractUser):
-    class Roles(models.TextChoices):
-        USER = "Пользователь", _("user")
-        MODERATOR = "Модератор", _("moderator")
-        ADMIN = "Администратор", _("admin")
+    USER = "user"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
+
+    ROLES = (
+        (USER, "Пользователь"),
+        (ADMIN, "Администратор"),
+        (MODERATOR, "Модератор"),
+    )
+    username_validator = UsernameRegexValidator()
     username = models.CharField(
         max_length=150,
         unique=True,
         verbose_name="Пользователь",
+        validators=(username_validator, validate_username,),
     )
     email = models.EmailField(
         unique=True,
         max_length=254,
         verbose_name="Почта",
     )
-    first_name = models.CharField(
-        max_length=150,
-        null=True,
-        verbose_name="Имя"
-    )
-    last_name = models.CharField(
-        max_length=150,
-        null=True,
-        verbose_name="Фамилия"
-    )
+    first_name = models.CharField(max_length=150, null=True, verbose_name="Имя")
+    last_name = models.CharField(max_length=150, null=True, verbose_name="Фамилия")
     bio = models.TextField(
         blank=True,
-        null=True,
         verbose_name="Кратко о себе",
     )
     role = models.CharField(
-        max_length=max(len(role[0]) for role in Roles.choices),
-        choices=Roles.choices,
-        default=Roles.USER,
+        max_length=max([len(role) for role, name in ROLES]),
+        choices=ROLES,
+        default=USER,
         verbose_name="Роль",
     )
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
@@ -69,22 +68,21 @@ class User(AbstractUser):
         verbose_name_plural = "Пользователи"
         constraints = [
             models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_username_email'
-            )
+                fields=["username", "email"], name="unique_username_email"
+            ),
         ]
 
     @property
     def is_user(self):
-        return self.role == self.Roles.USER
+        return self.role == self.USER
 
     @property
     def is_admin(self):
-        return self.role == self.Roles.ADMIN
+        return self.role == self.ADMIN or self.is_superuser or self.is_staff
 
     @property
     def is_moderator(self):
-        return self.role == self.Roles.MODERATOR
+        return self.role == self.MODERATOR
 
     def __str__(self):
         return self.username
