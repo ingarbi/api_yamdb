@@ -7,6 +7,7 @@ admin.site.register(Title)
 admin.site.register(Review)
 admin.site.register(Comment)
 
+
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     """User admin class."""
