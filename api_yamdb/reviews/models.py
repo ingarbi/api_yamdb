@@ -8,6 +8,51 @@ from .utilites import current_year
 from .validators import UsernameValidatorMixin
 
 
+class User(AbstractUser, UsernameValidatorMixin):
+    ADMIN = "admin"
+    MODERATOR = "moderator"
+    USER = "user"
+    ROLES = (
+        (ADMIN, "Administrator"),
+        (MODERATOR, "Moderator"),
+        (USER, "User"),
+    )
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
+    email = models.EmailField(
+        verbose_name="Адрес электронной почты",
+        unique=True,
+        max_length=settings.DEFAULT_EMAIL_LENGTH,
+    )
+    role = models.CharField(
+        verbose_name="Роль",
+        max_length=settings.DEFAULT_FIELD_LENGTH,
+        choices=ROLES,
+        default=USER,
+    )
+    bio = models.TextField(verbose_name="О себе", null=True, blank=True)
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_superuser or self.is_staff
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    class Meta:
+        ordering = ("id",)
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+
+    def __str__(self):
+        return self.username
+
+
 class Category(models.Model):
     name = models.CharField(max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
@@ -16,6 +61,11 @@ class Category(models.Model):
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
         default_related_name = "categories"
+
+# class Test(models.Model):
+#     name = models.CharField(max_length=256)
+#     slug = models.SlugField(unique=True, max_length=50)
+
 
 
 class Genre(models.Model):
@@ -85,12 +135,11 @@ class Review(models.Model):
         related_name="reviews",
     )
     text = models.TextField()
-    author = models.IntegerField()
-    # author = models.ForeignKey(
-    #     User,
-    #     on_delete=models.CASCADE,
-    #     related_name='reviews',
-    # )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+    )
     score = models.IntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
@@ -113,12 +162,11 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
     )
     text = models.TextField()
-    author = models.IntegerField()
-    # author = models.ForeignKey(
-    #     User,
-    #     on_delete=models.CASCADE,
-    #     related_name='comments',
-    # )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -128,46 +176,3 @@ class Comment(models.Model):
         return self.text
 
 
-class User(AbstractUser, UsernameValidatorMixin):
-    ADMIN = "admin"
-    MODERATOR = "moderator"
-    USER = "user"
-    ROLES = (
-        (ADMIN, "Administrator"),
-        (MODERATOR, "Moderator"),
-        (USER, "User"),
-    )
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
-    email = models.EmailField(
-        verbose_name="Адрес электронной почты",
-        unique=True,
-        max_length=settings.DEFAULT_EMAIL_LENGTH,
-    )
-    role = models.CharField(
-        verbose_name="Роль",
-        max_length=settings.DEFAULT_FIELD_LENGTH,
-        choices=ROLES,
-        default=USER,
-    )
-    bio = models.TextField(verbose_name="О себе", null=True, blank=True)
-
-    @property
-    def is_moderator(self):
-        return self.role == self.MODERATOR
-
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN or self.is_superuser or self.is_staff
-
-    @property
-    def is_user(self):
-        return self.role == self.USER
-
-    class Meta:
-        ordering = ("id",)
-        verbose_name = "Пользователь"
-        verbose_name_plural = "Пользователи"
-
-    def __str__(self):
-        return self.username

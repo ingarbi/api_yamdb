@@ -18,7 +18,7 @@ router.register(
     CommentViewSet,
     basename='comments'
 )
-router.register("users", UserViewSet, basename="users")
+router.register('users', UserViewSet, basename="users")
 
 urlpatterns = [
     path("v1/", include(router.urls)),

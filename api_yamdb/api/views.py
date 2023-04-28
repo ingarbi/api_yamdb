@@ -14,14 +14,12 @@ from .filiters import TitleFilter
 from .permissions import IsAdmin
 from .serializers import (
     CategorySerializer,
-    # CommentSerializer,
+    CommentSerializer,
     GenreSerializer,
     RegisterDataSerializer,
-    # ReviewSerializer,
-    TitlePostSerializer,
-    # TitleReadSerializer,
-    TitleSerializer,
-    # TitleWriteSerializer,
+    ReviewSerializer,
+    TitleReadSerializer,
+    TitleWriteSerializer,
     TokenSerializer,
     UserEditSerializer,
     UserSerializer,
@@ -30,10 +28,6 @@ from .utils import confirmation_mail
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    """
-    Вьюсет для обработки всех категорий.
-    """
-
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
