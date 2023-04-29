@@ -60,12 +60,6 @@ class Category(models.Model):
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
-        default_related_name = "categories"
-
-# class Test(models.Model):
-#     name = models.CharField(max_length=256)
-#     slug = models.SlugField(unique=True, max_length=50)
-
 
 
 class Genre(models.Model):
@@ -75,7 +69,6 @@ class Genre(models.Model):
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
-        default_related_name = "genres"
 
 
 class Title(models.Model):
@@ -113,7 +106,6 @@ class Title(models.Model):
     class Meta:
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
-        default_related_name = "titles"
         ordering = ("name",)
 
 
@@ -147,7 +139,10 @@ class Review(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["title", "author"], name="unique_review"),
+            models.UniqueConstraint(
+                fields=['author', 'title'],
+                name='unique_review'
+            )
         ]
         ordering = ("pub_date",)
 

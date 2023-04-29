@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.conf import settings
 from rest_framework.validators import UniqueValidator
 from reviews.validators import UsernameValidatorMixin
+from rest_framework.generics import get_object_or_404
+from rest_framework.exceptions import ValidationError
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 
@@ -53,6 +55,18 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'text', 'author', 'score', 'pub_date')
+
+    def validate(self, data):
+        request = self.context['request']
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if (
+                request.method == 'POST'
+                and Review.objects.filter(title=title, author=author).exists()
+        ):
+            raise ValidationError('Your review is already exist')
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
