@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Category, Genre, Title, Review, Comment, User
+
+from .models import Category, Comment, Genre, Review, Title, User
 
 admin.site.register(Category)
 admin.site.register(Genre)
@@ -10,7 +11,6 @@ admin.site.register(Comment)
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    """User admin class."""
     list_display = ('pk', 'username', 'email', 'is_superuser',
                     'is_staff', 'role')
     search_fields = ('username',)

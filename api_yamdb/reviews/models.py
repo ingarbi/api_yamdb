@@ -1,11 +1,9 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
-from .utilites import current_year
-from .validators import UsernameValidatorMixin
+from django.db import models
+
+from .validators import UsernameValidatorMixin, validate_year
 
 
 class User(AbstractUser, UsernameValidatorMixin):
@@ -45,48 +43,41 @@ class User(AbstractUser, UsernameValidatorMixin):
         return self.role == self.USER
 
     class Meta:
-        ordering = ("id",)
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+        ordering = ("id",)
 
     def __str__(self):
         return self.username
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    name = models.CharField(max_length=settings.LIMIT_CHAT)
+    slug = models.SlugField(unique=True, max_length=settings.MAX_SLUG_LENGTH)
 
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
-        ordering = ['slug']
+        ordering = ("slug",)
 
 
 class Genre(models.Model):
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    name = models.CharField(max_length=settings.LIMIT_CHAT)
+    slug = models.SlugField(unique=True, max_length=settings.MAX_SLUG_LENGTH)
 
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
-        ordering = ['slug']
+        ordering = ("slug",)
 
 
 class Title(models.Model):
-    name = models.CharField("Название произведения", max_length=settings.LIMIT_CHAT)
+    name = models.CharField("Название произведения",
+                            max_length=settings.LIMIT_CHAT)
     year = models.PositiveSmallIntegerField(
         "Год выпуска",
         db_index=True,
-        validators=[
-            MinValueValidator(
-                limit_value=settings.MIN_LIMIT_VALUE,
-                message="Год не может быть меньше или равен нулю",
-            ),
-            MaxValueValidator(
-                limit_value=current_year, message="Год не может быть больше текущего"
-            ),
-        ],
+        validators=[validate_year, ]
     )
     description = models.TextField("Описание", blank=True)
     genre = models.ManyToManyField(
@@ -108,7 +99,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
-        ordering = ["name", ]
+        ordering = ("name",)
 
 
 class GenreTitle(models.Model):
@@ -132,18 +123,22 @@ class Review(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews',
+        related_name="reviews",
     )
     score = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[MinValueValidator(settings.MIN_LIMIT_VALUE),
+                    MaxValueValidator(settings.MAX_LIMIT_VALUE)
+                    ],
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = "Отзыв"
+        verbose_name_plural = "Отзывы"
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
-                name='unique_review'
+                fields=["author", "title"],
+                name="unique_review"
             )
         ]
         ordering = ("pub_date",)
@@ -162,14 +157,14 @@ class Comment(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments',
+        related_name="comments",
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        verbose_name = "Комментарий"
+        verbose_name_plural = "Комментарии"
         ordering = ("pub_date",)
 
     def __str__(self):
         return self.text
-
-
