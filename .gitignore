@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+sent_emails
+sent_emails/
+
 # Distribution / packaging
 .Python
 build/
