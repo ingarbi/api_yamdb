@@ -1,22 +1,25 @@
 from django.urls import include, path
-from .views import UserViewSet, get_jwt_token, register, CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet, CommentViewSet
+
 from .utils import NoPutRouter
+from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
+                    ReviewViewSet, TitleViewSet, UserViewSet, get_jwt_token,
+                    register)
 
 app_name = "api"
- 
+
 router = NoPutRouter()
-router.register('categories', CategoryViewSet)
-router.register('genres', GenreViewSet)
-router.register('titles', TitleViewSet)
+router.register("categories", CategoryViewSet)
+router.register("genres", GenreViewSet)
+router.register("titles", TitleViewSet)
 router.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
-    basename='reviews'
+    basename="reviews"
 )
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
-    basename='comments'
+    basename="comments"
 )
 router.register("users", UserViewSet, basename="users")
 

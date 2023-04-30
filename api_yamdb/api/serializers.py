@@ -1,67 +1,93 @@
-import datetime as dt
-
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
-
-from reviews.models import Category, Genre, Title, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import UsernameValidatorMixin
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
-        fields = ('name', 'slug')
+        fields = ("name", "slug")
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer(many=True)
-    category = CategorySerializer()
-    rating = serializers.IntegerField(default=1)
+class TitleReadSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category',
-                  )
-        read_only_fields = ('id', 'name', 'year', 'rating',
-                            'description', 'genre', 'category',
-                            )
+        fields = "__all__"
 
 
-class TitlePostSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True
-    )
+class TitleWriteSerializer(serializers.ModelSerializer):
     category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all()
+        queryset=Category.objects.all(),
+        slug_field="slug",
     )
-    rating = serializers.IntegerField(required=False)
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field="slug",
+        many=True,
+    )
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'genre', 'category')
+        fields = "__all__"
 
-    def validate(self, value):
-        current_year = dt.date.today().year
-        if value > current_year:
-            raise serializers.ValidationError(
-                'Год произведения не может быть больше текущего.'
-            )
-        return value
 
-    def to_representation(self, instance):
-        return TitleSerializer(instance).data
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+    )
+
+    class Meta:
+        model = Review
+        fields = (
+            "id",
+            "text",
+            "author",
+            "score",
+            "pub_date",
+        )
+
+    def validate(self, data):
+        request = self.context["request"]
+        author = request.user
+        title_id = self.context.get("view").kwargs.get("title_id")
+        title = get_object_or_404(Title, pk=title_id)
+        if (
+                request.method == "POST"
+                and Review.objects.filter(title=title, author=author).exists()
+        ):
+            raise ValidationError("Your review is already exist!")
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field="username",
+        read_only=True,
+    )
+
+    class Meta:
+        model = Comment
+        fields = (
+            "id",
+            "text",
+            "author",
+            "pub_date",
+        )
 
 
 class UserSerializer(serializers.ModelSerializer, UsernameValidatorMixin):
@@ -72,6 +98,7 @@ class UserSerializer(serializers.ModelSerializer, UsernameValidatorMixin):
     )
 
     class Meta:
+        model = User
         fields = (
             "username",
             "email",
@@ -80,7 +107,6 @@ class UserSerializer(serializers.ModelSerializer, UsernameValidatorMixin):
             "bio",
             "role",
         )
-        model = User
 
 
 class UserEditSerializer(UserSerializer):
@@ -98,8 +124,8 @@ class RegisterDataSerializer(
     )
 
     class Meta:
-        fields = ("username", "email")
         model = User
+        fields = ("username", "email")
 
 
 class TokenSerializer(serializers.Serializer, UsernameValidatorMixin):

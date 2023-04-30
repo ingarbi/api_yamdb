@@ -1,6 +1,8 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.db import models
+from django.utils import timezone
 from rest_framework import serializers
 
 
@@ -24,3 +26,11 @@ class UsernameValidatorMixin:
                 "Имя пользователя 'me'- не доступно"
             )
         return value
+
+
+def validate_year(value):
+    now = timezone.now().year
+    if value > now:
+        raise ValidationError(
+            f'Год произведения {value} не может быть больше текущего {now}'
+        )

@@ -1,6 +1,6 @@
-from pathlib import Path
 import os
 from datetime import timedelta
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -135,3 +135,7 @@ EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
 DEFAULT_FROM_EMAIL = "admin@yamdb.com"
 DEFAULT_EMAIL_LENGTH = 254
 DEFAULT_FIELD_LENGTH = 150
+LIMIT_CHAT = 256
+MAX_SLUG_LENGTH = 50
+MIN_LIMIT_VALUE = 0
+MAX_LIMIT_VALUE = 10

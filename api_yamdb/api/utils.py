@@ -15,9 +15,6 @@ def confirmation_mail(user):
 
 
 class NoPutRouter(DefaultRouter):
-    """
-    Router class that disables the PUT method.
-    """
 
     def get_method_map(self, viewset, method_map):
         bound_methods = super().get_method_map(viewset, method_map)
