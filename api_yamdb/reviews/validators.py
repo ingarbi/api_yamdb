@@ -32,5 +32,5 @@ def validate_year(value):
     now = timezone.now().year
     if value > now:
         raise ValidationError(
-            f'Год произведения {value} не может быть больше текущего {now}'
+            f"Год произведения {value} не может быть больше текущего {now}"
         )
