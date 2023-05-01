@@ -5,15 +5,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
-from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
-from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
-                                   ListModelMixin)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from .filters import TitleFilter
+from .mixins import CategoryAndGenreMixinViewSet
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAuthorOrModeratorOrAdminOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -24,24 +22,14 @@ from .serializers import (CategorySerializer, CommentSerializer,
 from .utils import confirmation_mail
 
 
-class CategoryViewSet(CreateModelMixin, ListModelMixin,
-                      DestroyModelMixin, viewsets.GenericViewSet):
+class CategoryViewSet(CategoryAndGenreMixinViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
-    search_fields = ("name",)
-    lookup_field = "slug"
 
 
-class GenreViewSet(CreateModelMixin, ListModelMixin,
-                   DestroyModelMixin, viewsets.GenericViewSet):
+class GenreViewSet(CategoryAndGenreMixinViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("name",)
-    lookup_field = "slug"
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -93,14 +81,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 @api_view(["POST"])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
-    if User.objects.filter(
-            username=request.data.get("username"),
-            email=request.data.get("email")
-    ).exists():
-        user_in_base = User.objects.get(
-            username=request.data.get("username"),
-            email=request.data.get("email"),
-        )
+    user = User.objects.filter(username=request.data.get("username"),
+                               email=request.data.get("email"))
+    if user.exists():
+        user_in_base = user.first()
         confirmation_mail(user_in_base)
         return Response(request.data, status=status.HTTP_200_OK)
     try:

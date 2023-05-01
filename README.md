@@ -130,6 +130,7 @@ ___
 - Pytest
 - Pytest Django
 - Pytest Pythonpath
+- Python Dotenv
 - Pytz
 - Requests
 - Sqlparse
