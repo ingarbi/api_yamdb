@@ -77,14 +77,15 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
 
+    def get_review(self):
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
-        return review.comments.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, id=self.kwargs.get("review_id"))
         serializer.save(
-            review=review,
+            review=self.get_review(),
             author=self.request.user,
         )
 
@@ -104,7 +105,7 @@ def register(request):
         return Response(request.data, status=status.HTTP_200_OK)
     try:
         serializer.is_valid(raise_exception=True)
-        user, create = User.objects.get_or_create(**serializer.validated_data)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
     except IntegrityError:
         raise ValidationError("Неверное имя пользователя или email")
     confirmation_mail(user)
